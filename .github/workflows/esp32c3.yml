@@ -18,7 +18,7 @@ jobs:
           - "esp32c3"
         examples:
           - "gpio"
-        idf-branch: ["release/v5.0"] 
+        idf-tag: ["v4.3.4","v4.3.2"] 
         os: [ubuntu-latest]  
         python-version: [3.9]
 
@@ -41,8 +41,9 @@ jobs:
 
         - name: Build 
           run: |
-            git clone -b ${{ matrix.idf-branch }} --recursive https://github.com/espressif/esp-idf.git
+            git clone -b ${{ matrix.idf-tag }} --recursive https://github.com/espressif/esp-idf.git
             cd esp-idf
+            git 
             ./install.sh ${{ matrix.targets }}
             . ./export.sh
             cd ..
