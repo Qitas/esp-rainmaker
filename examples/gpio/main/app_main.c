@@ -24,6 +24,8 @@
 #include "driver/gpio.h"
 static const char *TAG = "app_main";
 
+#define TEST_GPIO_MODE_IO         9 
+
 /* Callback to handle commands received from the RainMaker cloud */
 static esp_err_t write_cb(const esp_rmaker_device_t *device, const esp_rmaker_param_t *param,
             const esp_rmaker_param_val_t val, void *priv_data, esp_rmaker_write_ctx_t *ctx)
@@ -111,10 +113,14 @@ void app_main()
         vTaskDelay(5000/portTICK_PERIOD_MS);
         abort();
     }
-        wifi_ap_record_t ap_info;
+    wifi_ap_record_t ap_info;
     esp_wifi_sta_get_ap_info(&ap_info);
     int8_t rssi = ap_info.rssi;  
     uint32_t cnt = 0;
+    gpio_config_t io_conf;
+    io_conf.pin_bit_mask = (1<<TEST_GPIO_MODE_IO);
+    io_conf.mode = GPIO_MODE_INPUT;
+    gpio_config(&io_conf);
     while(1)
     {
         uint32_t heap = esp_get_minimum_free_heap_size();
@@ -129,9 +135,10 @@ void app_main()
             else ESP_LOGW("RSSI","%d -> %d",ap_info.rssi,rssi);
             rssi = ap_info.rssi;
         }
-        if (gpio_get_level(9) == 0) {
+        if (gpio_get_level(TEST_GPIO_MODE_IO) == 0) {
             cnt ++;
-            ESP_LOGE("BTN", "%d", cnt);
+            ESP_LOGI("mode", "%d", cnt);
         }
+        // else ESP_LOGI("LEVEL", "%d", gpio_get_level(TEST_GPIO_MODE_IO));
     }
 }
