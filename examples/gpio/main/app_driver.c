@@ -13,7 +13,7 @@
 
 #include <app_reset.h>
 #include "app_priv.h"
-
+#include <ws2812_led.h>
 #define RMT_TX_CHANNEL RMT_CHANNEL_0
 /* This is the button that is used for toggling the power */
 #define BUTTON_GPIO          CONFIG_EXAMPLE_BOARD_BUTTON_GPIO
@@ -31,10 +31,13 @@ esp_err_t app_driver_set_gpio(const char *name, bool state)
 {
     if (strcmp(name, "Red") == 0) {
         gpio_set_level(OUTPUT_GPIO_RED, state);
+        ws2812_led_set_rgb(200,0,0);
     } else if (strcmp(name, "Green") == 0) {
         gpio_set_level(OUTPUT_GPIO_GREEN, state);
+        ws2812_led_set_rgb(0,200,0);
     } else if (strcmp(name, "Blue") == 0) {
         gpio_set_level(OUTPUT_GPIO_BLUE, state);
+        ws2812_led_set_rgb(0,0,200);
     } else {
         return ESP_FAIL;
     }

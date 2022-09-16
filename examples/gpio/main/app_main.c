@@ -18,16 +18,33 @@
 
 #include <app_wifi.h>
 #include <app_insights.h>
-
+#include <ws2812_led.h>
 #include "app_priv.h"
 #include "esp_wifi.h"
-#include "driver/gpio.h"
+
 static const char *TAG = "app_main";
 
 /* Callback to handle commands received from the RainMaker cloud */
 static esp_err_t write_cb(const esp_rmaker_device_t *device, const esp_rmaker_param_t *param,
             const esp_rmaker_param_val_t val, void *priv_data, esp_rmaker_write_ctx_t *ctx)
 {
+    // if (ctx) {
+    //     ESP_LOGI(TAG, "Received write request via : %s", esp_rmaker_device_cb_src_to_str(ctx->src));
+    // }
+    // char *device_name = esp_rmaker_device_get_name(device);
+    // char *param_name = esp_rmaker_param_get_name(param);
+    // if (strcmp(param_name, ESP_RMAKER_DEF_POWER_NAME) == 0) {
+    //     ESP_LOGI(TAG, "Received value = %s for %s - %s",
+    //             val.val.b? "true" : "false", device_name, param_name);
+    //     app_fan_set_power(val.val.b);
+    // } else if (strcmp(param_name, ESP_RMAKER_DEF_SPEED_NAME) == 0) {
+    //     ESP_LOGI(TAG, "Received value = %d for %s - %s",
+    //             val.val.i, device_name, param_name);
+    //     app_fan_set_speed(val.val.i);
+    // } else {
+    //     /* Silently ignoring invalid params */
+    //     return ESP_OK;
+    // }
     if (ctx) {
         ESP_LOGI(TAG, "Received write request via : %s", esp_rmaker_device_cb_src_to_str(ctx->src));
     }
@@ -55,7 +72,8 @@ void app_main()
         err = nvs_flash_init();
     }
     ESP_ERROR_CHECK( err );
-
+    ws2812_led_init();
+    ws2812_led_set_rgb(200,0,0);
     /* Initialize Wi-Fi. Note that, this should be called before esp_rmaker_node_init()
      */
     app_wifi_init();
@@ -111,10 +129,10 @@ void app_main()
         vTaskDelay(5000/portTICK_PERIOD_MS);
         abort();
     }
+    ws2812_led_set_rgb(0,0,0);
     wifi_ap_record_t ap_info;
     esp_wifi_sta_get_ap_info(&ap_info);
     int8_t rssi = ap_info.rssi;  
-    uint32_t cnt = 0;
     while(1)
     {
         uint32_t heap = esp_get_minimum_free_heap_size();

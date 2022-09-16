@@ -15,6 +15,7 @@
 #include <stdint.h>
 #include <esp_err.h>
 #include <esp_log.h>
+#include "sdkconfig.h"
 
 static const char *TAG = "ws2812_led";
 
