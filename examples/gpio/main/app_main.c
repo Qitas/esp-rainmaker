@@ -20,7 +20,8 @@
 #include <app_insights.h>
 
 #include "app_priv.h"
-
+#include "esp_wifi.h"
+#include "driver/gpio.h"
 static const char *TAG = "app_main";
 
 /* Callback to handle commands received from the RainMaker cloud */
@@ -38,6 +39,10 @@ static esp_err_t write_cb(const esp_rmaker_device_t *device, const esp_rmaker_pa
 
 void app_main()
 {
+    uint32_t min_heap = esp_get_free_heap_size();
+   
+    ESP_LOGI("start free heap"," %luKB",min_heap/1024);   
+
     /* Initialize Application specific hardware drivers and
      * set initial state.
      */
@@ -90,7 +95,7 @@ void app_main()
     esp_rmaker_ota_enable_default();
 
     /* Enable Insights. Requires CONFIG_ESP_INSIGHTS_ENABLED=y */
-    app_insights_enable();
+    // app_insights_enable();
 
     /* Start the ESP RainMaker Agent */
     esp_rmaker_start();
@@ -100,10 +105,33 @@ void app_main()
      * else, it will start Wi-Fi provisioning. The function will return
      * after a connection has been successfully established
      */
-    err = app_wifi_start(POP_TYPE_RANDOM);
+    err = app_wifi_start(POP_TYPE_NONE);
     if (err != ESP_OK) {
         ESP_LOGE(TAG, "Could not start Wifi. Aborting!!!");
         vTaskDelay(5000/portTICK_PERIOD_MS);
         abort();
+    }
+        wifi_ap_record_t ap_info;
+    esp_wifi_sta_get_ap_info(&ap_info);
+    int8_t rssi = ap_info.rssi;  
+    uint32_t cnt = 0;
+    while(1)
+    {
+        uint32_t heap = esp_get_minimum_free_heap_size();
+        if(min_heap > heap){
+            min_heap = heap;
+            ESP_LOGW("min free heap","%luKB ",min_heap/1024);
+        }
+        vTaskDelay(pdMS_TO_TICKS(500));
+        esp_wifi_sta_get_ap_info(&ap_info);
+        if(rssi != ap_info.rssi){
+            if(rssi > ap_info.rssi) ESP_LOGI("RSSI","%d -> %d",ap_info.rssi,rssi);
+            else ESP_LOGW("RSSI","%d -> %d",ap_info.rssi,rssi);
+            rssi = ap_info.rssi;
+        }
+        if (gpio_get_level(9) == 0) {
+            cnt ++;
+            ESP_LOGE("BTN", "%d", cnt);
+        }
     }
 }
