@@ -26,21 +26,27 @@
 
 #define WIFI_RESET_BUTTON_TIMEOUT       3
 #define FACTORY_RESET_BUTTON_TIMEOUT    10
-
+static uint32_t red_onf = 0;
+static uint32_t green_onf = 0;
+static uint32_t blue_onff = 0;
 esp_err_t app_driver_set_gpio(const char *name, bool state)
 {
     if (strcmp(name, "Red") == 0) {
         gpio_set_level(OUTPUT_GPIO_RED, state);
-        ws2812_led_set_rgb(200,0,0);
+        if(state) red_onf = 200;
+        else red_onf = 0;
     } else if (strcmp(name, "Green") == 0) {
         gpio_set_level(OUTPUT_GPIO_GREEN, state);
-        ws2812_led_set_rgb(0,200,0);
+        if(state) green_onf = 200;
+        else green_onf = 0;
     } else if (strcmp(name, "Blue") == 0) {
         gpio_set_level(OUTPUT_GPIO_BLUE, state);
-        ws2812_led_set_rgb(0,0,200);
+        if(state) blue_onff = 200;
+        else blue_onff = 0;
     } else {
         return ESP_FAIL;
     }
+    ws2812_led_set_rgb(red_onf,green_onf,blue_onff);
     return ESP_OK;
 }
 

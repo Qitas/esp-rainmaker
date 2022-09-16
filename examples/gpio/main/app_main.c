@@ -56,6 +56,7 @@ static esp_err_t write_cb(const esp_rmaker_device_t *device, const esp_rmaker_pa
 
 void app_main()
 {
+    uint32_t cnt =0;
     uint32_t min_heap = esp_get_free_heap_size();
    
     ESP_LOGI("start free heap"," %luKB",min_heap/1024);   
@@ -133,6 +134,7 @@ void app_main()
     wifi_ap_record_t ap_info;
     esp_wifi_sta_get_ap_info(&ap_info);
     int8_t rssi = ap_info.rssi;  
+    char *infoBuffer = malloc(256);
     while(1)
     {
         uint32_t heap = esp_get_minimum_free_heap_size();
@@ -143,9 +145,13 @@ void app_main()
         vTaskDelay(pdMS_TO_TICKS(500));
         esp_wifi_sta_get_ap_info(&ap_info);
         if(rssi != ap_info.rssi){
-            if(rssi > ap_info.rssi) ESP_LOGI("RSSI","%d -> %d",ap_info.rssi,rssi);
-            else ESP_LOGW("RSSI","%d -> %d",ap_info.rssi,rssi);
+            ESP_LOGW("RSSI","%d -> %d",ap_info.rssi,rssi);
             rssi = ap_info.rssi;
+        }
+        cnt++;
+        if(cnt%10==0){
+            vTaskGetRunTimeStats(infoBuffer);
+            ESP_LOGI("TimeStats","\n%s",infoBuffer);
         }
     }
 }

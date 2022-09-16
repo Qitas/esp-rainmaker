@@ -24,3 +24,12 @@ esptool.py --chip esp32c3 merge_bin -o merged-rainmaker-c3-v5.0.b.bin @flash_arg
 esptool.py --chip esp32c3 merge_bin -o merged-rainmaker-c3-v4.3.p.bin @flash_args
 esptool.py erase_region 0x00010000 0x6000  
 ```
+
+### 内存资源占用
+
+基于IDF v4.3.2 : min free heap: 161KB
+基于IDF v4.3.4 : min free heap: 160KB 
+
+添加FreeRTOS统计后
+
+基于IDF v4.3.2 : min free heap: 160KB 93% IDLE
