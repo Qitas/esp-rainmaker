@@ -56,11 +56,11 @@ jobs:
         - name: Upload-uf2
           uses: actions/upload-artifact@v2
           with:
-            name: rainmaker-uf2-${{ matrix.targets }}-${{ matrix.examples }}
+            name: uf2-${{ matrix.targets }}-${{ matrix.examples }}-${{ esp-idf }}
             path: examples/${{ matrix.examples }}/build/uf2.bin
 
         - name: Upload-bin
           uses: actions/upload-artifact@v2
           with:
-            name: rainmaker-bin-${{ matrix.targets }}-${{ matrix.examples }}
+            name: bin-${{ matrix.targets }}-${{ matrix.examples }}-${{ esp-idf }}
             path: examples/${{ matrix.examples }}/build/test-rainmaker-${{ matrix.targets }}-${{ matrix.examples }}.bin

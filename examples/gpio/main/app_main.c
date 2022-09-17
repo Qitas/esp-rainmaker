@@ -23,7 +23,7 @@
 #include "esp_wifi.h"
 
 static const char *TAG = "app_main";
-static const char *DeviceName = "AE-TEST-4";
+static const char *DeviceName = "AE-TEST-2";
 /* Callback to handle commands received from the RainMaker cloud */
 static esp_err_t write_cb(const esp_rmaker_device_t *device, const esp_rmaker_param_t *param,
             const esp_rmaker_param_val_t val, void *priv_data, esp_rmaker_write_ctx_t *ctx)
