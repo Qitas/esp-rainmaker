@@ -23,7 +23,7 @@
 #include "esp_wifi.h"
 
 static const char *TAG = "app_main";
-
+static const char *DeviceName = "AE-TEST-4";
 /* Callback to handle commands received from the RainMaker cloud */
 static esp_err_t write_cb(const esp_rmaker_device_t *device, const esp_rmaker_param_t *param,
             const esp_rmaker_param_val_t val, void *priv_data, esp_rmaker_write_ctx_t *ctx)
@@ -56,7 +56,7 @@ static esp_err_t write_cb(const esp_rmaker_device_t *device, const esp_rmaker_pa
 
 void app_main()
 {
-    uint32_t cnt =0;
+    // uint32_t cnt =0;
     uint32_t min_heap = esp_get_free_heap_size();
    
     ESP_LOGI("start free heap"," %luKB",min_heap/1024);   
@@ -85,7 +85,7 @@ void app_main()
     esp_rmaker_config_t rainmaker_cfg = {
         .enable_time_sync = false,
     };
-    esp_rmaker_node_t *node = esp_rmaker_node_init(&rainmaker_cfg, "ESP RainMaker Device", "TEST-Dev-3");
+    esp_rmaker_node_t *node = esp_rmaker_node_init(&rainmaker_cfg, "ESP RainMaker Device", DeviceName);
     if (!node) {
         ESP_LOGE(TAG, "Could not initialise node. Aborting!!!");
         vTaskDelay(5000/portTICK_PERIOD_MS);
@@ -93,7 +93,7 @@ void app_main()
     }
 
     /* Create a device and add the relevant parameters to it */
-    esp_rmaker_device_t *gpio_device = esp_rmaker_device_create("TEST-Dev-3", NULL, NULL);
+    esp_rmaker_device_t *gpio_device = esp_rmaker_device_create(DeviceName, NULL, NULL);
     esp_rmaker_device_add_cb(gpio_device, write_cb, NULL);
 
     esp_rmaker_param_t *red_param = esp_rmaker_param_create("Red", NULL, esp_rmaker_bool(false), PROP_FLAG_READ | PROP_FLAG_WRITE);
