@@ -15,7 +15,7 @@
 
 #include <esp_rmaker_core.h>
 #include <esp_rmaker_standard_types.h>
-
+#include "esp_ota_ops.h"
 #include <app_wifi.h>
 #include <app_insights.h>
 #include <ws2812_led.h>
@@ -23,28 +23,11 @@
 #include "esp_wifi.h"
 
 static const char *TAG = "app_main";
-static const char *DeviceName = "AE-TEST-2";
+
 /* Callback to handle commands received from the RainMaker cloud */
 static esp_err_t write_cb(const esp_rmaker_device_t *device, const esp_rmaker_param_t *param,
             const esp_rmaker_param_val_t val, void *priv_data, esp_rmaker_write_ctx_t *ctx)
 {
-    // if (ctx) {
-    //     ESP_LOGI(TAG, "Received write request via : %s", esp_rmaker_device_cb_src_to_str(ctx->src));
-    // }
-    // char *device_name = esp_rmaker_device_get_name(device);
-    // char *param_name = esp_rmaker_param_get_name(param);
-    // if (strcmp(param_name, ESP_RMAKER_DEF_POWER_NAME) == 0) {
-    //     ESP_LOGI(TAG, "Received value = %s for %s - %s",
-    //             val.val.b? "true" : "false", device_name, param_name);
-    //     app_fan_set_power(val.val.b);
-    // } else if (strcmp(param_name, ESP_RMAKER_DEF_SPEED_NAME) == 0) {
-    //     ESP_LOGI(TAG, "Received value = %d for %s - %s",
-    //             val.val.i, device_name, param_name);
-    //     app_fan_set_speed(val.val.i);
-    // } else {
-    //     /* Silently ignoring invalid params */
-    //     return ESP_OK;
-    // }
     if (ctx) {
         ESP_LOGI(TAG, "Received write request via : %s", esp_rmaker_device_cb_src_to_str(ctx->src));
     }
@@ -85,6 +68,11 @@ void app_main()
     esp_rmaker_config_t rainmaker_cfg = {
         .enable_time_sync = false,
     };
+    uint8_t mac[6];
+    char DeviceName[12];
+    esp_read_mac(mac, ESP_MAC_WIFI_STA);
+    sprintf(DeviceName,"AE-TEST-%02x%02x",mac[4],mac[5]);
+    ESP_LOGI(TAG, "name %s",DeviceName);
     esp_rmaker_node_t *node = esp_rmaker_node_init(&rainmaker_cfg, "ESP RainMaker Device", DeviceName);
     if (!node) {
         ESP_LOGE(TAG, "Could not initialise node. Aborting!!!");
@@ -135,6 +123,7 @@ void app_main()
     esp_wifi_sta_get_ap_info(&ap_info);
     int8_t rssi = ap_info.rssi;  
     // char *infoBuffer = malloc(256);
+    uint32_t cnt = 0;
     while(1)
     {
         uint32_t heap = esp_get_minimum_free_heap_size();
@@ -145,22 +134,22 @@ void app_main()
         vTaskDelay(pdMS_TO_TICKS(500));
         esp_wifi_sta_get_ap_info(&ap_info);
         if(rssi > ap_info.rssi && ap_info.rssi > -60){
-            ESP_LOGI("RSSI","%d -> %d",ap_info.rssi,rssi);
+            ESP_LOGI("RSSI","%d -> %d",rssi,ap_info.rssi);
             rssi = ap_info.rssi;
         }
         else if(rssi > ap_info.rssi && ap_info.rssi > -80){
-            ESP_LOGW("RSSI","%d -> %d",ap_info.rssi,rssi);
+            ESP_LOGW("RSSI","%d -> %d",rssi,ap_info.rssi);
             rssi = ap_info.rssi;
         }
         else if(rssi > ap_info.rssi && ap_info.rssi < -80){
-            ESP_LOGE("RSSI","%d -> %d",ap_info.rssi,rssi);
+            ESP_LOGE("RSSI","%d -> %d",rssi,ap_info.rssi);
             rssi = ap_info.rssi;
         }
-        else rssi = ap_info.rssi;
-        // cnt++;
-        // if(cnt%100==0){
-        //     vTaskGetRunTimeStats(infoBuffer);
-        //     ESP_LOGI("TimeStats","\n%s",infoBuffer);
-        // }
+        cnt++;
+        if(cnt%100==0){
+            rssi = 0;
+            // vTaskGetRunTimeStats(infoBuffer);
+            // ESP_LOGI("TimeStats","\n%s",infoBuffer);
+        }
     }
 }
