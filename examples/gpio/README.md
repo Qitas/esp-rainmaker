@@ -33,3 +33,15 @@ esptool.py erase_region 0x00010000 0x6000
 添加FreeRTOS统计后
 
 基于IDF v4.3.2 : min free heap: 160KB 93% IDLE
+
+#### 5.0
+
+基于IDF release/v5.0 min free heap: 144KB  (连接前160KB，配网过程中99KB)
+
+配网时间：
+
+36955(完成过程)     = 4110ms
+32845(获取IP地址)   = 4330ms
+28515(收到入网信息) 
+
+最佳RSSI:-24dBm

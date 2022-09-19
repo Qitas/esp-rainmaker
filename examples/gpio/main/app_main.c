@@ -144,10 +144,19 @@ void app_main()
         }
         vTaskDelay(pdMS_TO_TICKS(500));
         esp_wifi_sta_get_ap_info(&ap_info);
-        if(rssi != ap_info.rssi){
+        if(rssi > ap_info.rssi && ap_info.rssi > -60){
+            ESP_LOGI("RSSI","%d -> %d",ap_info.rssi,rssi);
+            rssi = ap_info.rssi;
+        }
+        else if(rssi > ap_info.rssi && ap_info.rssi > -80){
             ESP_LOGW("RSSI","%d -> %d",ap_info.rssi,rssi);
             rssi = ap_info.rssi;
         }
+        else if(rssi > ap_info.rssi && ap_info.rssi < -80){
+            ESP_LOGE("RSSI","%d -> %d",ap_info.rssi,rssi);
+            rssi = ap_info.rssi;
+        }
+        else rssi = ap_info.rssi;
         // cnt++;
         // if(cnt%100==0){
         //     vTaskGetRunTimeStats(infoBuffer);
