@@ -61,4 +61,3 @@ jobs:
           with:
             name: bin-${{ matrix.targets }}-${{ matrix.examples }}-${{ matrix.esp-idf }}
             path: examples/${{ matrix.examples }}/build/test-rainmaker-${{ matrix.targets }}-${{ matrix.examples }}-${{ matrix.esp-idf }}.bin
-s
