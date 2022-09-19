@@ -18,21 +18,18 @@ jobs:
           - "esp32c3"
         examples:
           - "gpio"
-        esp-idf: ["v4.3.4","v4.3.2","release/v5.0"] 
-        os: [ubuntu-latest]  
-        python-version: [3.9]
-
-    runs-on: ${{ matrix.os }}
+        esp-idf: ["v4.4","v4.3","v5.0"] 
+    runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
         - uses: actions/checkout@v2
           with:
             submodules: "recursive"
 
-        - name: Set up Python ${{ matrix.python-version }}
+        - name: Set up Python 
           uses: actions/setup-python@v1
           with:
-            python-version: ${{ matrix.python-version }}
+            python-version: 3.9
 
         - name: Install
           if: matrix.os == 'ubuntu-latest'
@@ -41,7 +38,7 @@ jobs:
 
         - name: Build 
           run: |
-            git clone -b ${{ matrix.esp-idf }} --recursive https://github.com/espressif/esp-idf.git
+            git clone -b release/${{ matrix.esp-idf }} --recursive https://github.com/espressif/esp-idf.git
             cd esp-idf
             ./install.sh ${{ matrix.targets }}
             . ./export.sh
@@ -51,16 +48,17 @@ jobs:
             idf.py build
             idf.py uf2
             cd build
-            esptool.py --chip esp32c3 merge_bin -o test-rainmaker-${{ matrix.targets }}-${{ matrix.examples }}.bin @flash_args
+            esptool.py --chip esp32c3 merge_bin -o test-rainmaker-${{ matrix.targets }}-${{ matrix.examples }}-${{ matrix.esp-idf }}.bin @flash_args
 
         - name: Upload-uf2
           uses: actions/upload-artifact@v2
           with:
-            name: uf2-${{ matrix.targets }}-${{ matrix.examples }}-${{ esp-idf }}
+            name: uf2-${{ matrix.targets }}-${{ matrix.examples }}-${{ matrix.esp-idf }}
             path: examples/${{ matrix.examples }}/build/uf2.bin
 
         - name: Upload-bin
           uses: actions/upload-artifact@v2
           with:
-            name: bin-${{ matrix.targets }}-${{ matrix.examples }}-${{ esp-idf }}
-            path: examples/${{ matrix.examples }}/build/test-rainmaker-${{ matrix.targets }}-${{ matrix.examples }}.bin
+            name: bin-${{ matrix.targets }}-${{ matrix.examples }}-${{ matrix.esp-idf }}
+            path: examples/${{ matrix.examples }}/build/test-rainmaker-${{ matrix.targets }}-${{ matrix.examples }}-${{ matrix.esp-idf }}.bin
+s
