@@ -1,4 +1,4 @@
-name: esp32c3
+name: ci
 
 on:
   push:
@@ -49,15 +49,12 @@ jobs:
             idf.py uf2
             cd build
             esptool.py --chip esp32c3 merge_bin -o test-rainmaker-${{ matrix.targets }}-${{ matrix.examples }}-${{ matrix.esp-idf }}.bin @flash_args
+            mkdir output
+            mv test-rainmaker-${{ matrix.targets }}-${{ matrix.examples }}-${{ matrix.esp-idf }}.bin  output/
+            mv uf2.bin  output/
 
-        - name: Upload-uf2
+        - name: Upload
           uses: actions/upload-artifact@v2
           with:
-            name: uf2-${{ matrix.targets }}-${{ matrix.examples }}-${{ matrix.esp-idf }}
-            path: examples/${{ matrix.examples }}/build/uf2.bin
-
-        - name: Upload-bin
-          uses: actions/upload-artifact@v2
-          with:
-            name: bin-${{ matrix.targets }}-${{ matrix.examples }}-${{ matrix.esp-idf }}
-            path: examples/${{ matrix.examples }}/build/test-rainmaker-${{ matrix.targets }}-${{ matrix.examples }}-${{ matrix.esp-idf }}.bin
+            name: ${{ matrix.targets }}-${{ matrix.examples }}-${{ matrix.esp-idf }}
+            path: examples/${{ matrix.examples }}/build/output
