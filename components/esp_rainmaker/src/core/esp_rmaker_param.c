@@ -293,7 +293,6 @@ static esp_err_t esp_rmaker_device_set_params(_esp_rmaker_device_t *device, jpar
     while (param) {
         esp_rmaker_param_val_t new_val = {0};
         bool param_found = false;
-        ESP_LOGI("esp_rmaker_device_set_params"," %d",param->val.type); 
         switch(param->val.type) {
             case RMAKER_VAL_TYPE_BOOLEAN:
                 if (json_obj_get_bool(jptr, param->name, &new_val.val.b) == 0) {

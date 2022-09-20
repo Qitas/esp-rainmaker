@@ -12,9 +12,11 @@
 #include <freertos/task.h>
 #include <esp_log.h>
 #include <nvs_flash.h>
-
+#include <freertos/timers.h>
 #include <esp_rmaker_core.h>
 #include <esp_rmaker_standard_types.h>
+#include <esp_rmaker_standard_params.h>
+#include <esp_rmaker_standard_devices.h>
 #if (ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 0, 0))
 #include "esp_mac.h"
 #else
@@ -28,7 +30,11 @@
 #include "esp_wifi.h"
 
 static const char *TAG = "app_main";
-
+static TimerHandle_t sensor_timer;
+esp_rmaker_device_t *temp_sensor_device;
+static float g_wifirssi = -20.0;
+// static uint32_t rstotal = 0;
+#define REPORTING_PERIOD            2000
 /* Callback to handle commands received from the RainMaker cloud */
 static esp_err_t write_cb(const esp_rmaker_device_t *device, const esp_rmaker_param_t *param,
             const esp_rmaker_param_val_t val, void *priv_data, esp_rmaker_write_ctx_t *ctx)
@@ -42,6 +48,36 @@ static esp_err_t write_cb(const esp_rmaker_device_t *device, const esp_rmaker_pa
     return ESP_OK;
 }
 
+
+static void app_sensor_update(TimerHandle_t handle)
+{
+    wifi_ap_record_t ap_info;
+    esp_wifi_sta_get_ap_info(&ap_info);
+    int8_t rssi = ap_info.rssi;  
+    g_wifirssi = rssi;
+    esp_rmaker_param_update_and_report(
+                esp_rmaker_device_get_param_by_type(temp_sensor_device, ESP_RMAKER_PARAM_TEMPERATURE),
+                esp_rmaker_float(g_wifirssi));
+}
+
+float app_get_current_rssi()
+{
+    return g_wifirssi;
+}
+
+esp_err_t app_sensor_init(void)
+{
+    ws2812_led_init();
+    ws2812_led_set_rgb(200,0,0);
+    sensor_timer = xTimerCreate("app_rssi_update_tm", (REPORTING_PERIOD)/portTICK_PERIOD_MS,
+                            pdTRUE, NULL, app_sensor_update);
+    if (sensor_timer) {
+        xTimerStart(sensor_timer, 0);
+        return ESP_OK;
+    }
+    return ESP_FAIL;
+}
+
 void app_main()
 {
     // uint32_t cnt =0;
@@ -53,7 +89,7 @@ void app_main()
      * set initial state.
      */
     app_driver_init();
-
+    app_sensor_init();
     /* Initialize NVS. */
     esp_err_t err = nvs_flash_init();
     if (err == ESP_ERR_NVS_NO_FREE_PAGES || err == ESP_ERR_NVS_NEW_VERSION_FOUND) {
@@ -61,8 +97,6 @@ void app_main()
         err = nvs_flash_init();
     }
     ESP_ERROR_CHECK( err );
-    ws2812_led_init();
-    ws2812_led_set_rgb(200,0,0);
     /* Initialize Wi-Fi. Note that, this should be called before esp_rmaker_node_init()
      */
     app_wifi_init();
@@ -75,15 +109,18 @@ void app_main()
     };
     uint8_t mac[6];
     char DeviceName[16];
-    esp_read_mac(mac, ESP_MAC_BT);
-    sprintf(DeviceName,"AE-TEST-%02x%02x%02x",mac[3],mac[4],mac[5]);
+    esp_read_mac(mac, ESP_MAC_WIFI_STA);
+    sprintf(DeviceName,"AE-C3-%02x%02x%02x",mac[3],mac[4],mac[5]);
     ESP_LOGI(TAG, "name %s",DeviceName);
-    esp_rmaker_node_t *node = esp_rmaker_node_init(&rainmaker_cfg, "ESP RainMaker Device", DeviceName);
+    esp_rmaker_node_t *node = esp_rmaker_node_init(&rainmaker_cfg, "TEST Device", DeviceName);
     if (!node) {
         ESP_LOGE(TAG, "Could not initialise node. Aborting!!!");
         vTaskDelay(5000/portTICK_PERIOD_MS);
         abort();
     }
+    /* Create a device and add the relevant parameters to it */
+    temp_sensor_device = esp_rmaker_temp_sensor_device_create("Wi-Fi RSSI", NULL, app_get_current_rssi());
+    esp_rmaker_node_add_device(node, temp_sensor_device);
 
     /* Create a device and add the relevant parameters to it */
     esp_rmaker_device_t *gpio_device = esp_rmaker_device_create(DeviceName, NULL, NULL);
@@ -124,11 +161,11 @@ void app_main()
         abort();
     }
     ws2812_led_set_rgb(0,0,0);
-    wifi_ap_record_t ap_info;
-    esp_wifi_sta_get_ap_info(&ap_info);
-    int8_t rssi = ap_info.rssi;  
-    // char *infoBuffer = malloc(256);
-    uint32_t cnt = 0;
+    // wifi_ap_record_t ap_info;
+    // esp_wifi_sta_get_ap_info(&ap_info);
+    // int8_t rssi = ap_info.rssi;  
+    // // char *infoBuffer = malloc(256);
+    // uint32_t cnt = 0;
     while(1)
     {
         uint32_t heap = esp_get_minimum_free_heap_size();
@@ -136,25 +173,25 @@ void app_main()
             min_heap = heap;
             ESP_LOGW("min free heap","%luKB ",min_heap/1024);
         }
-        vTaskDelay(pdMS_TO_TICKS(500));
-        esp_wifi_sta_get_ap_info(&ap_info);
-        if(rssi > ap_info.rssi && ap_info.rssi > -60){
-            ESP_LOGI("RSSI","%d -> %d",rssi,ap_info.rssi);
-            rssi = ap_info.rssi;
-        }
-        else if(rssi > ap_info.rssi && ap_info.rssi > -80){
-            ESP_LOGW("RSSI","%d -> %d",rssi,ap_info.rssi);
-            rssi = ap_info.rssi;
-        }
-        else if(rssi > ap_info.rssi && ap_info.rssi < -80){
-            ESP_LOGE("RSSI","%d -> %d",rssi,ap_info.rssi);
-            rssi = ap_info.rssi;
-        }
-        cnt++;
-        if(cnt%100==0){
-            rssi = 0;
-            // vTaskGetRunTimeStats(infoBuffer);
-            // ESP_LOGI("TimeStats","\n%s",infoBuffer);
-        }
+        vTaskDelay(pdMS_TO_TICKS(1000));
+        // esp_wifi_sta_get_ap_info(&ap_info);
+        // if(rssi > ap_info.rssi && ap_info.rssi > -60){
+        //     ESP_LOGI("RSSI","%d -> %d",rssi,ap_info.rssi);
+        //     rssi = ap_info.rssi;
+        // }
+        // else if(rssi > ap_info.rssi && ap_info.rssi > -80){
+        //     ESP_LOGW("RSSI","%d -> %d",rssi,ap_info.rssi);
+        //     rssi = ap_info.rssi;
+        // }
+        // else if(rssi > ap_info.rssi && ap_info.rssi < -80){
+        //     ESP_LOGE("RSSI","%d -> %d",rssi,ap_info.rssi);
+        //     rssi = ap_info.rssi;
+        // }
+        // cnt++;
+        // if(cnt%100==0){
+        //     rssi = 0;
+        //     // vTaskGetRunTimeStats(infoBuffer);
+        //     // ESP_LOGI("TimeStats","\n%s",infoBuffer);
+        // }
     }
 }
