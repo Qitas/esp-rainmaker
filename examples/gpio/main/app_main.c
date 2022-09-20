@@ -15,7 +15,12 @@
 
 #include <esp_rmaker_core.h>
 #include <esp_rmaker_standard_types.h>
-#include "esp_ota_ops.h"
+#if (ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 0, 0))
+#include "esp_mac.h"
+#else
+#include "esp_system.h"
+#endif
+
 #include <app_wifi.h>
 #include <app_insights.h>
 #include <ws2812_led.h>
