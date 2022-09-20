@@ -69,9 +69,9 @@ void app_main()
         .enable_time_sync = false,
     };
     uint8_t mac[6];
-    char DeviceName[12];
-    esp_read_mac(mac, ESP_MAC_WIFI_STA);
-    sprintf(DeviceName,"AE-TEST-%02x%02x",mac[4],mac[5]);
+    char DeviceName[16];
+    esp_read_mac(mac, ESP_MAC_BT);
+    sprintf(DeviceName,"AE-TEST-%02x%02x%02x",mac[3],mac[4],mac[5]);
     ESP_LOGI(TAG, "name %s",DeviceName);
     esp_rmaker_node_t *node = esp_rmaker_node_init(&rainmaker_cfg, "ESP RainMaker Device", DeviceName);
     if (!node) {

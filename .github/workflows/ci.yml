@@ -10,7 +10,7 @@ on:
     #   - '**.py'
 
 jobs:
-  build:
+  release:
     strategy:
       fail-fast: false
       matrix:
@@ -48,7 +48,57 @@ jobs:
             idf.py build
             idf.py uf2
             cd build
-            esptool.py --chip esp32c3 merge_bin -o test-rainmaker-${{ matrix.targets }}-${{ matrix.examples }}-${{ matrix.esp-idf }}.bin @flash_args
+            esptool.py --chip ${{ matrix.targets }} merge_bin -o test-rainmaker-${{ matrix.targets }}-${{ matrix.examples }}-${{ matrix.esp-idf }}.bin @flash_args
+            mkdir output
+            mv test-rainmaker-${{ matrix.targets }}-${{ matrix.examples }}-${{ matrix.esp-idf }}.bin  output/
+            mv uf2.bin  output/
+
+        - name: Upload
+          uses: actions/upload-artifact@v2
+          with:
+            name: ${{ matrix.targets }}-${{ matrix.examples }}-${{ matrix.esp-idf }}
+            path: examples/${{ matrix.examples }}/build/output
+
+
+  tags:
+    strategy:
+      fail-fast: false
+      matrix:
+        targets:
+          - "esp32c3"
+        examples:
+          - "gpio"
+        esp-idf: ["v4.3.4","v4.3.2"] 
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+        - uses: actions/checkout@v2
+          with:
+            submodules: "recursive"
+
+        - name: Set up Python 
+          uses: actions/setup-python@v1
+          with:
+            python-version: 3.9
+
+        - name: Install
+          if: matrix.os == 'ubuntu-latest'
+          run: |
+            sudo apt install -y git wget gperf cmake ninja-build ccache dfu-util 
+
+        - name: Build 
+          run: |
+            git clone -b ${{ matrix.esp-idf }} --recursive https://github.com/espressif/esp-idf.git
+            cd esp-idf
+            ./install.sh ${{ matrix.targets }}
+            . ./export.sh
+            cd ..
+            cd examples/${{ matrix.examples }}
+            idf.py set-target ${{ matrix.targets }}
+            idf.py build
+            idf.py uf2
+            cd build
+            esptool.py --chip ${{ matrix.targets }} merge_bin -o test-rainmaker-${{ matrix.targets }}-${{ matrix.examples }}-${{ matrix.esp-idf }}.bin @flash_args
             mkdir output
             mv test-rainmaker-${{ matrix.targets }}-${{ matrix.examples }}-${{ matrix.esp-idf }}.bin  output/
             mv uf2.bin  output/
