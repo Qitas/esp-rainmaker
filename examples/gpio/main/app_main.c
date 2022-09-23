@@ -110,7 +110,7 @@ void app_main()
     uint8_t mac[6];
     char DeviceName[16];
     esp_read_mac(mac, ESP_MAC_WIFI_STA);
-    sprintf(DeviceName,"AE-C3-%02x%02x%02x",mac[3],mac[4],mac[5]);
+    sprintf(DeviceName,"AE-C2-%02x%02x%02x",mac[3],mac[4],mac[5]);
     ESP_LOGI(TAG, "name %s",DeviceName);
     esp_rmaker_node_t *node = esp_rmaker_node_init(&rainmaker_cfg, "TEST Device", DeviceName);
     if (!node) {
