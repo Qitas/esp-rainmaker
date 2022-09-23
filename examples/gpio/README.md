@@ -45,3 +45,11 @@ esptool.py erase_region 0x00010000 0x6000
 28515(收到入网信息) 
 
 最佳RSSI:-24dBm
+
+```
+esptool.py write_flash 0x340000 45535043330A.bin
+```
+
+```
+esptool.py write_flash 0x1b0000 455350433391.bin
+```

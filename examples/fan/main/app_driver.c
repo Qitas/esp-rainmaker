@@ -15,7 +15,6 @@
 #include <esp_rmaker_standard_params.h> 
 
 #include <app_reset.h>
-#include <ws2812_led.h>
 #include "app_priv.h"
 
 /* This is the button that is used for toggling the power */

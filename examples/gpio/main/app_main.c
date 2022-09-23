@@ -25,7 +25,7 @@
 
 #include <app_wifi.h>
 #include <app_insights.h>
-#include <ws2812_led.h>
+
 #include "app_priv.h"
 #include "esp_wifi.h"
 
@@ -34,7 +34,7 @@ static TimerHandle_t sensor_timer;
 esp_rmaker_device_t *temp_sensor_device;
 static float g_wifirssi = -20.0;
 // static uint32_t rstotal = 0;
-#define REPORTING_PERIOD            2000
+#define REPORTING_PERIOD            3000
 /* Callback to handle commands received from the RainMaker cloud */
 static esp_err_t write_cb(const esp_rmaker_device_t *device, const esp_rmaker_param_t *param,
             const esp_rmaker_param_val_t val, void *priv_data, esp_rmaker_write_ctx_t *ctx)
@@ -67,8 +67,8 @@ float app_get_current_rssi()
 
 esp_err_t app_sensor_init(void)
 {
-    ws2812_led_init();
-    ws2812_led_set_rgb(200,0,0);
+    // ws2812_led_init();
+    // ws2812_led_set_rgb(200,0,0);
     sensor_timer = xTimerCreate("app_rssi_update_tm", (REPORTING_PERIOD)/portTICK_PERIOD_MS,
                             pdTRUE, NULL, app_sensor_update);
     if (sensor_timer) {
@@ -141,7 +141,7 @@ void app_main()
     esp_rmaker_node_add_device(node, gpio_device);
 
     /* Enable OTA */
-    esp_rmaker_ota_enable_default();
+    // esp_rmaker_ota_enable_default();
 
     /* Enable Insights. Requires CONFIG_ESP_INSIGHTS_ENABLED=y */
     // app_insights_enable();
@@ -160,7 +160,7 @@ void app_main()
         vTaskDelay(5000/portTICK_PERIOD_MS);
         abort();
     }
-    ws2812_led_set_rgb(0,0,0);
+    // ws2812_led_set_rgb(0,0,0);
     // wifi_ap_record_t ap_info;
     // esp_wifi_sta_get_ap_info(&ap_info);
     // int8_t rssi = ap_info.rssi;  
