@@ -49,13 +49,14 @@ void app_driver_init()
     /* Configure power */
     gpio_config_t io_conf = {
         .mode = GPIO_MODE_OUTPUT,
-        .pull_up_en = 1,
+        .pull_down_en = 0,
+        .pull_up_en = 0,
     };
     uint64_t pin_mask = (((uint64_t)1 << OUTPUT_GPIO_RED ) | ((uint64_t)1 << OUTPUT_GPIO_GREEN ) | ((uint64_t)1 << OUTPUT_GPIO_BLUE ));
     io_conf.pin_bit_mask = pin_mask;
     /* Configure the GPIO */
     gpio_config(&io_conf);
-    gpio_set_level(OUTPUT_GPIO_RED, false);
-    gpio_set_level(OUTPUT_GPIO_GREEN, false);
-    gpio_set_level(OUTPUT_GPIO_BLUE, false);
+    gpio_set_level(OUTPUT_GPIO_RED, true);
+    gpio_set_level(OUTPUT_GPIO_GREEN, true);
+    gpio_set_level(OUTPUT_GPIO_BLUE, true);
 }

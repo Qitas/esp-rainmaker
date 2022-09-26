@@ -30,6 +30,8 @@
 #include "esp_wifi.h"
 
 static const char *TAG = "app_main";
+static const char *title = "TEST C2";
+
 static TimerHandle_t sensor_timer;
 esp_rmaker_device_t *temp_sensor_device;
 static float g_wifirssi = -20.0;
@@ -112,14 +114,14 @@ void app_main()
     esp_read_mac(mac, ESP_MAC_WIFI_STA);
     sprintf(DeviceName,"AE-C2-%02x%02x%02x",mac[3],mac[4],mac[5]);
     ESP_LOGI(TAG, "name %s",DeviceName);
-    esp_rmaker_node_t *node = esp_rmaker_node_init(&rainmaker_cfg, "TEST Device", DeviceName);
+    esp_rmaker_node_t *node = esp_rmaker_node_init(&rainmaker_cfg, title, DeviceName);
     if (!node) {
         ESP_LOGE(TAG, "Could not initialise node. Aborting!!!");
         vTaskDelay(5000/portTICK_PERIOD_MS);
         abort();
     }
     /* Create a device and add the relevant parameters to it */
-    temp_sensor_device = esp_rmaker_temp_sensor_device_create("Wi-Fi RSSI", NULL, app_get_current_rssi());
+    temp_sensor_device = esp_rmaker_temp_sensor_device_create("RSSI", NULL, app_get_current_rssi());
     esp_rmaker_node_add_device(node, temp_sensor_device);
 
     /* Create a device and add the relevant parameters to it */
