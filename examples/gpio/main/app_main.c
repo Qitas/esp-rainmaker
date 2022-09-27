@@ -45,7 +45,7 @@ static esp_err_t write_cb(const esp_rmaker_device_t *device, const esp_rmaker_pa
     return ESP_OK;
 }
 
-#define REPORTING_PERIOD    0
+#define REPORTING_PERIOD    10000
 
 #if (REPORTING_PERIOD > 0)
 static TimerHandle_t sensor_timer;
@@ -55,8 +55,7 @@ static void app_sensor_update(TimerHandle_t handle)
 {
     wifi_ap_record_t ap_info;
     esp_wifi_sta_get_ap_info(&ap_info);
-    int8_t rssi = ap_info.rssi;  
-    g_wifirssi = rssi;
+    g_wifirssi = ap_info.rssi;  
     esp_rmaker_param_update_and_report(
                 esp_rmaker_device_get_param_by_type(temp_sensor_device, ESP_RMAKER_PARAM_TEMPERATURE),
                 esp_rmaker_float(g_wifirssi));
@@ -69,8 +68,6 @@ float app_get_current_rssi()
 
 esp_err_t app_sensor_init(void)
 {
-    ws2812_led_init();
-    ws2812_led_set_rgb(200,0,0);
     sensor_timer = xTimerCreate("app_rssi_update_tm", (REPORTING_PERIOD)/portTICK_PERIOD_MS,
                             pdTRUE, NULL, app_sensor_update);
     if (sensor_timer) {
@@ -93,7 +90,8 @@ void app_main()
     #if (REPORTING_PERIOD > 0)
     app_sensor_init();
     #endif
-    
+    ws2812_led_init();
+    ws2812_led_set_rgb(200,0,0);
     /* Initialize NVS. */
     esp_err_t err = nvs_flash_init();
     if (err == ESP_ERR_NVS_NO_FREE_PAGES || err == ESP_ERR_NVS_NEW_VERSION_FOUND) {
@@ -166,11 +164,14 @@ void app_main()
         abort();
     }
     ws2812_led_set_rgb(0,0,0);
-    // wifi_ap_record_t ap_info;
-    // esp_wifi_sta_get_ap_info(&ap_info);
-    // int8_t rssi = ap_info.rssi;  
+    #if (REPORTING_PERIOD == 0)
+    wifi_ap_record_t ap_info;
+    esp_wifi_sta_get_ap_info(&ap_info);
+    int8_t rssi_min = ap_info.rssi;  
+    int8_t rssi_max = ap_info.rssi;  
+    uint32_t cnt = 0;
+    #endif
     // // char *infoBuffer = malloc(256);
-    // uint32_t cnt = 0;
     while(1)
     {
         uint32_t heap = esp_get_minimum_free_heap_size();
@@ -179,24 +180,32 @@ void app_main()
             ESP_LOGW("min free heap","%luKB ",min_heap/1024);
         }
         vTaskDelay(pdMS_TO_TICKS(1000));
-        // esp_wifi_sta_get_ap_info(&ap_info);
-        // if(rssi > ap_info.rssi && ap_info.rssi > -60){
-        //     ESP_LOGI("RSSI","%d -> %d",rssi,ap_info.rssi);
-        //     rssi = ap_info.rssi;
-        // }
-        // else if(rssi > ap_info.rssi && ap_info.rssi > -80){
-        //     ESP_LOGW("RSSI","%d -> %d",rssi,ap_info.rssi);
-        //     rssi = ap_info.rssi;
-        // }
-        // else if(rssi > ap_info.rssi && ap_info.rssi < -80){
-        //     ESP_LOGE("RSSI","%d -> %d",rssi,ap_info.rssi);
-        //     rssi = ap_info.rssi;
-        // }
-        // cnt++;
-        // if(cnt%100==0){
-        //     rssi = 0;
-        //     // vTaskGetRunTimeStats(infoBuffer);
-        //     // ESP_LOGI("TimeStats","\n%s",infoBuffer);
-        // }
+        #if (REPORTING_PERIOD == 0)
+        esp_wifi_sta_get_ap_info(&ap_info);
+        if(rssi_min > ap_info.rssi && ap_info.rssi > -60){
+            ESP_LOGI("RSSI MIN","[%d -> %d] - [%d]",rssi_min,ap_info.rssi,rssi_max);
+            rssi_min = ap_info.rssi;
+        }
+        else if(rssi_min > ap_info.rssi && ap_info.rssi > -80){
+            ESP_LOGW("RSSI MIN","[%d -> %d] - [%d]",rssi_min,ap_info.rssi,rssi_max);
+            rssi_min = ap_info.rssi;
+        }
+        else if(rssi_min > ap_info.rssi && ap_info.rssi < -80){
+            ESP_LOGE("RSSI MIN","[%d -> %d] - [%d]",rssi_min,ap_info.rssi,rssi_max);
+            rssi_min = ap_info.rssi;
+        }       
+        if(rssi_max < ap_info.rssi ){
+            ESP_LOGI("RSSI MAX","[%d] - [%d -> %d]",rssi_min,rssi_max,ap_info.rssi);
+            rssi_max = ap_info.rssi;
+        }
+        cnt++;
+        if(cnt%100==0){
+            rssi_max = -100;
+            rssi_min = 10;
+            // vTaskGetRunTimeStats(infoBuffer);
+            // ESP_LOGI("TimeStats","\n%s",infoBuffer);
+        }
+        #endif
+
     }
 }
