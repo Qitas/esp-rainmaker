@@ -30,11 +30,8 @@
 #include "esp_wifi.h"
 
 static const char *TAG = "app_main";
-static TimerHandle_t sensor_timer;
-esp_rmaker_device_t *temp_sensor_device;
-static float g_wifirssi = -20.0;
-// static uint32_t rstotal = 0;
-#define REPORTING_PERIOD            2000
+static const char *title = "DevKitM-C3";
+
 /* Callback to handle commands received from the RainMaker cloud */
 static esp_err_t write_cb(const esp_rmaker_device_t *device, const esp_rmaker_param_t *param,
             const esp_rmaker_param_val_t val, void *priv_data, esp_rmaker_write_ctx_t *ctx)
@@ -48,7 +45,12 @@ static esp_err_t write_cb(const esp_rmaker_device_t *device, const esp_rmaker_pa
     return ESP_OK;
 }
 
+#define REPORTING_PERIOD    0
 
+#if (REPORTING_PERIOD > 0)
+static TimerHandle_t sensor_timer;
+esp_rmaker_device_t *temp_sensor_device;
+static float g_wifirssi = -20.0;
 static void app_sensor_update(TimerHandle_t handle)
 {
     wifi_ap_record_t ap_info;
@@ -77,19 +79,21 @@ esp_err_t app_sensor_init(void)
     }
     return ESP_FAIL;
 }
+#endif
 
 void app_main()
 {
-    // uint32_t cnt =0;
     uint32_t min_heap = esp_get_free_heap_size();
-   
     ESP_LOGI("start free heap"," %luKB",min_heap/1024);   
 
     /* Initialize Application specific hardware drivers and
      * set initial state.
      */
     app_driver_init();
+    #if (REPORTING_PERIOD > 0)
     app_sensor_init();
+    #endif
+    
     /* Initialize NVS. */
     esp_err_t err = nvs_flash_init();
     if (err == ESP_ERR_NVS_NO_FREE_PAGES || err == ESP_ERR_NVS_NEW_VERSION_FOUND) {
@@ -110,18 +114,19 @@ void app_main()
     uint8_t mac[6];
     char DeviceName[16];
     esp_read_mac(mac, ESP_MAC_WIFI_STA);
-    sprintf(DeviceName,"AE-C3-%02x%02x%02x",mac[3],mac[4],mac[5]);
+    sprintf(DeviceName,"AE-%02x%02x%02x%02x%02x%02x",mac[0],mac[1],mac[2],mac[3],mac[4],mac[5]);
     ESP_LOGI(TAG, "name %s",DeviceName);
-    esp_rmaker_node_t *node = esp_rmaker_node_init(&rainmaker_cfg, "TEST Device", DeviceName);
+    esp_rmaker_node_t *node = esp_rmaker_node_init(&rainmaker_cfg, title, DeviceName);
     if (!node) {
         ESP_LOGE(TAG, "Could not initialise node. Aborting!!!");
         vTaskDelay(5000/portTICK_PERIOD_MS);
         abort();
     }
+    #if (REPORTING_PERIOD > 0)
     /* Create a device and add the relevant parameters to it */
-    temp_sensor_device = esp_rmaker_temp_sensor_device_create("Wi-Fi RSSI", NULL, app_get_current_rssi());
+    temp_sensor_device = esp_rmaker_temp_sensor_device_create("RSSI", NULL, app_get_current_rssi());
     esp_rmaker_node_add_device(node, temp_sensor_device);
-
+    #endif
     /* Create a device and add the relevant parameters to it */
     esp_rmaker_device_t *gpio_device = esp_rmaker_device_create(DeviceName, NULL, NULL);
     esp_rmaker_device_add_cb(gpio_device, write_cb, NULL);
