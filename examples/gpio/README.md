@@ -46,6 +46,10 @@ esptool.py erase_region 0x00010000 0x6000
 
 最佳RSSI:-24dBm
 
+#### 4.4
+
+编译需要修改ESP_RMAKER_LOCAL_CTRL_SECURITY等级为0，同时需要注意同步子库和esp-insights对编译的影响
+
 
 ---
 
