@@ -45,9 +45,10 @@ static esp_err_t write_cb(const esp_rmaker_device_t *device, const esp_rmaker_pa
     return ESP_OK;
 }
 
-#define REPORTING_PERIOD    10000
+#define REPORTING_PERIOD    20000
 
 #if (REPORTING_PERIOD > 0)
+// #include <stdlib.h>
 static TimerHandle_t sensor_timer;
 esp_rmaker_device_t *temp_sensor_device;
 static float g_wifirssi = -20.0;
@@ -87,9 +88,6 @@ void app_main()
      * set initial state.
      */
     app_driver_init();
-    #if (REPORTING_PERIOD > 0)
-    app_sensor_init();
-    #endif
     ws2812_led_init();
     ws2812_led_set_rgb(200,0,0);
     /* Initialize NVS. */
@@ -164,7 +162,13 @@ void app_main()
         abort();
     }
     ws2812_led_set_rgb(0,0,0);
-    #if (REPORTING_PERIOD == 0)
+    #if (REPORTING_PERIOD > 0)
+    // srand(52);
+    // int rand_num = rand()%100;
+    // vTaskDelay(pdMS_TO_TICKS(rand_num*100));
+    // ESP_LOGW("rand"," %d",rand_num); 
+    app_sensor_init();
+    #else 
     wifi_ap_record_t ap_info;
     esp_wifi_sta_get_ap_info(&ap_info);
     int8_t rssi_min = ap_info.rssi;  
