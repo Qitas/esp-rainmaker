@@ -100,7 +100,7 @@ jobs:
             cd build
             esptool.py --chip ${{ matrix.targets }} merge_bin -o rainmaker-${{ matrix.targets }}-${{ matrix.examples }}-${{ matrix.esp-idf }}.bin @flash_args
             mkdir output
-            mv rainmaker-${{ matrix.examples }}-${{ matrix.targets }}-${{ matrix.esp-idf }}.bin  output/
+            mv rainmaker-${{ matrix.targets }}-${{ matrix.examples }}-${{ matrix.esp-idf }}.bin  output/
             mv uf2.bin  output/
 
         - name: Upload
