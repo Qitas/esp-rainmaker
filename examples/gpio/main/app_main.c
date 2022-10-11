@@ -30,7 +30,7 @@
 #include "esp_wifi.h"
 
 static const char *TAG = "app_main";
-static const char *title = "DevKitM-C3";
+static const char *title = "DevKitM-C2";
 
 /* Callback to handle commands received from the RainMaker cloud */
 static esp_err_t write_cb(const esp_rmaker_device_t *device, const esp_rmaker_param_t *param,
@@ -88,8 +88,6 @@ void app_main()
      * set initial state.
      */
     app_driver_init();
-    ws2812_led_init();
-    ws2812_led_set_rgb(200,0,0);
     /* Initialize NVS. */
     esp_err_t err = nvs_flash_init();
     if (err == ESP_ERR_NVS_NO_FREE_PAGES || err == ESP_ERR_NVS_NEW_VERSION_FOUND) {
@@ -110,7 +108,7 @@ void app_main()
     uint8_t mac[6];
     char DeviceName[16];
     esp_read_mac(mac, ESP_MAC_WIFI_STA);
-    sprintf(DeviceName,"C3-%02x%02x%02x%02x%02x%02x",mac[0],mac[1],mac[2],mac[3],mac[4],mac[5]);
+    sprintf(DeviceName,"C2-%02x%02x%02x%02x%02x%02x",mac[0],mac[1],mac[2],mac[3],mac[4],mac[5]);
     ESP_LOGI(TAG, "name %s",DeviceName);
     esp_rmaker_node_t *node = esp_rmaker_node_init(&rainmaker_cfg, title, DeviceName);
     if (!node) {
@@ -161,12 +159,7 @@ void app_main()
         vTaskDelay(5000/portTICK_PERIOD_MS);
         abort();
     }
-    ws2812_led_set_rgb(0,0,0);
     #if (REPORTING_PERIOD > 0)
-    // srand(52);
-    // int rand_num = rand()%100;
-    // vTaskDelay(pdMS_TO_TICKS(rand_num*100));
-    // ESP_LOGW("rand"," %d",rand_num); 
     app_sensor_init();
     #else 
     wifi_ap_record_t ap_info;
