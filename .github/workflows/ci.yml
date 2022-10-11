@@ -48,9 +48,9 @@ jobs:
             idf.py build
             idf.py uf2
             cd build
-            esptool.py --chip ${{ matrix.targets }} merge_bin -o test-rainmaker-${{ matrix.targets }}-${{ matrix.examples }}-${{ matrix.esp-idf }}.bin @flash_args
+            esptool.py --chip ${{ matrix.targets }} merge_bin -o rainmaker-${{ matrix.targets }}-${{ matrix.examples }}-${{ matrix.esp-idf }}.bin @flash_args
             mkdir output
-            mv test-rainmaker-${{ matrix.targets }}-${{ matrix.examples }}-${{ matrix.esp-idf }}.bin  output/
+            mv rainmaker-${{ matrix.targets }}-${{ matrix.examples }}-${{ matrix.esp-idf }}.bin  output/
             mv uf2.bin  output/
 
         - name: Upload

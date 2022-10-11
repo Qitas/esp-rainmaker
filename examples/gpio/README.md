@@ -23,6 +23,7 @@ esptool.py --chip esp32c3 merge_bin -o merged-rainmaker-c3-v4.3.4.bin @flash_arg
 esptool.py --chip esp32c3 merge_bin -o merged-rainmaker-c3-v5.0.b.bin @flash_args
 esptool.py --chip esp32c3 merge_bin -o merged-rainmaker-c3-v4.3.p.bin @flash_args
 esptool.py erase_region 0x00010000 0x6000  
+esptool.py write_flash  0x340000 45535043330A.bin
 ```
 
 ### 内存资源占用
