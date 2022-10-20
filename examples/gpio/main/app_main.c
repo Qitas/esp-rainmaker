@@ -45,7 +45,7 @@ static esp_err_t write_cb(const esp_rmaker_device_t *device, const esp_rmaker_pa
     return ESP_OK;
 }
 
-#define REPORTING_PERIOD    20000
+#define REPORTING_PERIOD    2000
 
 #if (REPORTING_PERIOD > 0)
 // #include <stdlib.h>
@@ -83,7 +83,18 @@ void app_main()
 {
     uint32_t min_heap = esp_get_free_heap_size();
     ESP_LOGI("start free heap"," %luKB",min_heap/1024);   
-
+    uint8_t mac[6];
+    char DeviceName[16];
+    esp_read_mac(mac, ESP_MAC_WIFI_STA);
+    sprintf(DeviceName,"%02x%02x%02x%02x%02x%02x",mac[0],mac[1],mac[2],mac[3],mac[4],mac[5]);
+    ESP_LOGI(TAG, "name %s",DeviceName);
+    esp_log_level_set("*", ESP_LOG_INFO);
+    esp_log_level_set("mqtt_client", ESP_LOG_VERBOSE);
+    esp_log_level_set("TRANSPORT_BASE", ESP_LOG_VERBOSE);
+    esp_log_level_set("esp-tls", ESP_LOG_VERBOSE);
+    esp_log_level_set("TRANSPORT", ESP_LOG_VERBOSE);
+    esp_log_level_set("outbox", ESP_LOG_VERBOSE);
+    esp_log_level_set("wifi", ESP_LOG_VERBOSE);
     /* Initialize Application specific hardware drivers and
      * set initial state.
      */
@@ -107,11 +118,6 @@ void app_main()
     esp_rmaker_config_t rainmaker_cfg = {
         .enable_time_sync = false,
     };
-    uint8_t mac[6];
-    char DeviceName[16];
-    esp_read_mac(mac, ESP_MAC_WIFI_STA);
-    sprintf(DeviceName,"C3-%02x%02x%02x%02x%02x%02x",mac[0],mac[1],mac[2],mac[3],mac[4],mac[5]);
-    ESP_LOGI(TAG, "name %s",DeviceName);
     esp_rmaker_node_t *node = esp_rmaker_node_init(&rainmaker_cfg, title, DeviceName);
     if (!node) {
         ESP_LOGE(TAG, "Could not initialise node. Aborting!!!");
