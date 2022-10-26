@@ -22,14 +22,14 @@
 #else
 #include "esp_system.h"
 #endif
-
+#include <esp_pm.h>
 #include <app_wifi.h>
 #include <app_insights.h>
 #include <ws2812_led.h>
 #include "app_priv.h"
 #include "esp_wifi.h"
 
-static const char *TAG = "app_main";
+static const char *TAG = "gpio_main";
 static const char *title = "DevKitM-C3";
 
 /* Callback to handle commands received from the RainMaker cloud */
@@ -45,7 +45,7 @@ static esp_err_t write_cb(const esp_rmaker_device_t *device, const esp_rmaker_pa
     return ESP_OK;
 }
 
-#define REPORTING_PERIOD    2000
+#define REPORTING_PERIOD    5000
 
 #if (REPORTING_PERIOD > 0)
 // #include <stdlib.h>
@@ -76,6 +76,32 @@ esp_err_t app_sensor_init(void)
         return ESP_OK;
     }
     return ESP_FAIL;
+}
+#endif
+
+#if CONFIG_TEST_WITH_PS
+int app_pm_config(void)
+{
+#if CONFIG_PM_ENABLE
+#if CONFIG_IDF_TARGET_ESP32
+   esp_pm_config_esp32_t pm_config = {
+#elif CONFIG_IDF_TARGET_ESP32S2
+   esp_pm_config_esp32s2_t pm_config = {
+#elif CONFIG_IDF_TARGET_ESP32C3
+   esp_pm_config_esp32c3_t pm_config = {
+#elif CONFIG_IDF_TARGET_ESP32C2
+   esp_pm_config_esp32c2_t pm_config = {
+#endif
+           .max_freq_mhz = 160,
+           .min_freq_mhz = 40,
+#if CONFIG_FREERTOS_USE_TICKLESS_IDLE
+           .light_sleep_enable = true 
+#endif
+   };
+   ESP_ERROR_CHECK (esp_pm_configure(&pm_config));
+   #endif // CONFIG_PM_ENABLE
+   ESP_LOGI("start with power save","160-40");
+   return ESP_OK;
 }
 #endif
 
@@ -110,6 +136,9 @@ void app_main()
     ESP_ERROR_CHECK( err );
     /* Initialize Wi-Fi. Note that, this should be called before esp_rmaker_node_init()
      */
+    #if CONFIG_TEST_WITH_PS
+    app_pm_config();
+    #endif
     app_wifi_init();
     
     /* Initialize the ESP RainMaker Agent.

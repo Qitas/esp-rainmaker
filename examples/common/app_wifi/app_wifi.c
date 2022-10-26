@@ -341,7 +341,7 @@ esp_err_t app_wifi_start_timer(void)
         ESP_LOGI(TAG, "Provisioning will auto stop after %d minute(s).",
                 APP_WIFI_PROV_TIMEOUT_PERIOD);
         int min_heap = esp_get_free_heap_size();
-        ESP_LOGI("free heap"," %luKB",min_heap/1024);   
+        ESP_LOGI("free heap"," %dKB",min_heap/1024);   
         return ESP_OK;
     } else {
         ESP_LOGE(TAG, "Failed to create Provisioning auto stop timer.");

@@ -1,5 +1,9 @@
 menu "Example Configuration"
 
+    config TEST_WITH_PS
+        bool "test with power save"
+        default n 
+
     config EXAMPLE_BOARD_BUTTON_GPIO
         int "Boot Button GPIO"
         default 0 if !IDF_TARGET_ESP32C3
