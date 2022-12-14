@@ -16,6 +16,7 @@
 #include <freertos/FreeRTOS.h>
 #include <freertos/timers.h>
 #include <freertos/task.h>
+#include <esp_efuse.h>
 #include <esp_event.h>
 #include <esp_log.h>
 #include <esp_ota_ops.h>
@@ -138,6 +139,8 @@ void esp_rmaker_ota_common_cb(void *priv)
     esp_rmaker_ota_data_t ota_data = {
         .url = ota->url,
         .filesize = ota->filesize,
+        .fw_version = ota->fw_version,
+        .ota_job_id = (char *)ota->transient_priv,
         .server_cert = ota->server_cert,
         .priv = ota->priv,
         .metadata = ota->metadata
@@ -181,6 +184,13 @@ static esp_err_t validate_image_header(esp_rmaker_ota_handle_t ota_handle,
     }
 #endif
 
+#ifndef CONFIG_ESP_RMAKER_SKIP_SECURE_VERSION_CHECK
+    if (esp_efuse_check_secure_version(new_app_info->secure_version) == false) {
+        ESP_LOGW(TAG, "New secure version is lower than stored in efuse. We will not continue the update.");
+        esp_rmaker_ota_report_status(ota_handle, OTA_STATUS_REJECTED, "Lower secure version received");
+        return ESP_FAIL;
+    }
+#endif
 
     return ESP_OK;
 }
@@ -306,7 +316,6 @@ ota_end:
 #endif /* CONFIG_BT_ENABLED */
     ota_finish_err = esp_https_ota_finish(https_ota_handle);
     if ((err == ESP_OK) && (ota_finish_err == ESP_OK)) {
-        ESP_LOGI(TAG, "OTA upgrade successful. Rebooting in %d seconds...", OTA_REBOOT_TIMER_SEC);
 #ifdef CONFIG_BOOTLOADER_APP_ROLLBACK_ENABLE
         nvs_handle handle;
         esp_err_t err = nvs_open_from_partition(ESP_RMAKER_NVS_PART_NAME, RMAKER_OTA_NVS_NAMESPACE, NVS_READWRITE, &handle);
@@ -320,7 +329,13 @@ ota_end:
 #else
         esp_rmaker_ota_report_status(ota_handle, OTA_STATUS_SUCCESS, "OTA Upgrade finished successfully");
 #endif
+#ifndef CONFIG_ESP_RMAKER_OTA_DISABLE_AUTO_REBOOT
+        ESP_LOGI(TAG, "OTA upgrade successful. Rebooting in %d seconds...", OTA_REBOOT_TIMER_SEC);
         esp_rmaker_reboot(OTA_REBOOT_TIMER_SEC);
+#else
+        ESP_LOGI(TAG, "OTA upgrade successful. Auto reboot is disabled. Requesting a Reboot via Event handler.");
+        esp_rmaker_ota_post_event(RMAKER_OTA_EVENT_REQ_FOR_REBOOT, NULL, 0);
+#endif
         return ESP_OK;
     } else {
         if (ota_finish_err == ESP_ERR_OTA_VALIDATE_FAILED) {
@@ -336,7 +351,6 @@ ota_end:
     return ESP_FAIL;
 }
 
-
 static void event_handler(void* arg, esp_event_base_t event_base,
                           int32_t event_id, void* event_data)
 {
@@ -351,7 +365,9 @@ static void event_handler(void* arg, esp_event_base_t event_base,
         s_ota_rollback_timer = NULL;
     }
     if (ota->type == OTA_USING_TOPICS) {
-        esp_rmaker_ota_fetch();
+        if (esp_rmaker_ota_fetch_with_delay(RMAKER_OTA_FETCH_DELAY) != ESP_OK) {
+            ESP_LOGE(TAG, "Failed to create OTA Fetch timer.");
+        }
     }
 }
 
