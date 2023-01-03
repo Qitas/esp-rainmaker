@@ -1,0 +1,22 @@
+ tools/kconfig_new/confgen.py | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/tools/kconfig_new/confgen.py b/tools/kconfig_new/confgen.py
+index 173b4e6098..33f5c41163 100755
+--- a/tools/kconfig_new/confgen.py
++++ b/tools/kconfig_new/confgen.py
+@@ -413,7 +413,10 @@ def get_json_values(config):
+             elif sym.type == kconfiglib.HEX:
+                 val = int(val, 16)
+             elif sym.type == kconfiglib.INT:
+-                val = int(val)
++                try:
++                    val = int(val)
++                except:
++                    val = 0
+             config_dict[sym.name] = val
+     for n in config.node_iter(False):
+         write_node(n)
+-- 
+2.34.1
+

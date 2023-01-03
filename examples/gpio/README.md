@@ -1,18 +1,16 @@
-# GPIO Example
+# GPIO TEST
 
-## Build and Flash firmware
+基于RainMaker测试C6开发板功能 RGB PIN:8
 
-Follow the ESP RainMaker Documentation [Get Started](https://rainmaker.espressif.com/docs/get-started.html) section to build and flash this firmware. Just note the path of this example.
+使用前请打补丁 test.patch
 
-## What to expect in this example?
+编译使用的idf版本  feature/bringup_esp32c6_chip_wifi_rebase1(5444d3d33b963ccc47e8c59620119af416160b54)
 
-- This example just provides 3 boolean parameters, linked to 3 GPIOS.
-- Toggling the buttons on the phone app should toggle the GPIOs on your board (and the LEDs, if any, connected to the GPIOs), and also print messages like these on the ESP32-S2 monitor:
-
+烧录证书
 ```
-I (16073) app_main: Received value = true for GPIO-Device - Red
+esptool.py write_flash  0x340000 xxxx.bin
 ```
-
-### Reset to Factory
-
-Press and hold the BOOT button for more than 3 seconds to reset the board to factory defaults. You will have to provision the board again to use it.
+日志记录
+```
+./logger -b 115200 -t -C log.csv /dev/ttyUSB0
+```
