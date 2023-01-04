@@ -22,7 +22,12 @@
 *.a
 *.la
 *.lo
-
+node.info
+random.info
+endpoint.info
+node.key
+node.crt
+node_info.csv
 # Shared objects (inc. Windows DLLs)
 *.dll
 *.so
