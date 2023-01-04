@@ -7,12 +7,12 @@
 *.obj
 *.elf
 *.pyc
-log*.csv
+*log*.csv
 # Linker output
 *.ilk
 *.map
 *.exp
-
+45535*.bin
 # Precompiled Headers
 *.gch
 *.pch

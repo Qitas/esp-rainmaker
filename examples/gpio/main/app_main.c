@@ -132,6 +132,10 @@ void app_main()
     esp_rmaker_param_add_ui_type(blue_param, ESP_RMAKER_UI_TOGGLE);
     esp_rmaker_device_add_param(gpio_device, blue_param);
 
+    esp_rmaker_param_t *led_param = esp_rmaker_param_create("Power", NULL, esp_rmaker_bool(false), PROP_FLAG_READ | PROP_FLAG_WRITE);
+    esp_rmaker_param_add_ui_type(led_param, ESP_RMAKER_UI_TOGGLE);
+    esp_rmaker_device_add_param(gpio_device, led_param);
+
     esp_rmaker_node_add_device(node, gpio_device);
 
     /* Enable OTA */
