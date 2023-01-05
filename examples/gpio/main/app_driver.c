@@ -31,7 +31,7 @@ static uint32_t green_onf = 0;
 static uint32_t blue_onff = 0;
 esp_err_t app_driver_set_gpio(const char *name, bool state)
 {
-    ESP_LOGI("app_driver_set_gpio"," %s %d",name,state);   
+    // ESP_LOGI("app_driver_set_gpio"," %s %d",name,state);   
     if (strcmp(name, "Power") == 0) {
         if(state){
             red_onf = 200;

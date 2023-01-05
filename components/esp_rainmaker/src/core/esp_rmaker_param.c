@@ -393,7 +393,7 @@ static esp_err_t esp_rmaker_device_set_params(_esp_rmaker_device_t *device, jpar
 
 esp_err_t esp_rmaker_handle_set_params(char *data, size_t data_len, esp_rmaker_req_src_t src)
 {
-    ESP_LOGI(TAG, "Received params: %.*s", data_len, data);
+    // ESP_LOGI(TAG, "Received params: %.*s", data_len, data);
     jparse_ctx_t jctx;
     if (json_parse_start(&jctx, data, data_len) != 0) {
         return ESP_FAIL;
